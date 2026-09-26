@@ -387,13 +387,11 @@ function MapInfoBlock({ layer, mapSize, view, placesInfo, status, preferred, onR
           value={`${KM_PER_PX.toFixed(3)} km/px · ${KM2_PER_PX2.toFixed(2)} km²/px`}
         />
       </div>
-      <div className="mt-2 text-[11px] font-mono text-zinc-400">
-        {status === "loading"
-          ? "loading map…"
-          : status === "blocked"
-            ? "placeholder grid shown"
-            : "map live • infinite horizontal"}
-      </div>
+      {(status === "loading" || status === "blocked") && (
+        <div className="mt-2 text-[11px] font-mono text-zinc-400">
+          {status === "loading" ? "loading map…" : "placeholder grid shown"}
+        </div>
+      )}
       <div className="mt-2 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-2.5 py-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
