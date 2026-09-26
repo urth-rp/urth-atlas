@@ -24,8 +24,14 @@ served at the domain root — base "/").
 search ("Search Urth Atlas") | locate + measure buttons. Locate flies to
 the saved preferred location (IndexedDB urth-atlas-prefs) when one exists;
 with nothing saved it stays put and drops the home pin at the current view
-center. Either way a pin is dropped — clicking it offers Save this spot /
-Clear (popup acts save-home / clear-home; hidden in viewOnly embeds).
+center. The pin ONLY ever shows as a draft (right after locate-with-
+nothing-saved, or via Edit) — once saved it goes invisible. The draft pin
+is draggable (dragend pushes the spot to App via onHomeMove, which
+rebuilds marker + popup with fresh coords; the shared 350ms click guard
+covers the post-drag map click). Relocating:
+Map Info has a Preferred location row (coords + Set/Edit + Clear);
+Edit reveals the pin at the current view for dragging + re-saving
+(popup acts save-home / clear-home; hidden in viewOnly embeds).
 [Claim notice] Lives in the Markers section (amber box, like the measurement
 disclaimer): claims must be approved, don't use this map for claims, link
 to the current political export (https://urthmaps.com/maps/export/urth.png).

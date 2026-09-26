@@ -349,7 +349,7 @@ function MapInfoRow({ label, value }) {
   );
 }
 
-function MapInfoBlock({ layer, mapSize, view, placesInfo, status }) {
+function MapInfoBlock({ layer, mapSize, view, placesInfo, status, preferred, onRelocate, onClearHome, viewOnly }) {
   const active = getLayer(layer);
   const counts = useMemo(() => {
     const c = { nation: 0, capital: 0, city: 0, town: 0 };
@@ -393,6 +393,38 @@ function MapInfoBlock({ layer, mapSize, view, placesInfo, status }) {
           : status === "blocked"
             ? "placeholder grid shown"
             : "map live • infinite horizontal"}
+      </div>
+      <div className="mt-2 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-2.5 py-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[11px] text-[#6b7280]">Preferred location</div>
+            <div className="text-[11px] font-mono text-[#111827] truncate">
+              {preferred
+                ? `X ${Math.round(preferred.x).toLocaleString()} · Y ${Math.round(preferred.y).toLocaleString()}`
+                : "Not set"}
+            </div>
+          </div>
+          {!viewOnly && (
+            <div className="flex gap-1.5 shrink-0">
+              <button
+                onClick={onRelocate}
+                title={preferred ? "Move the pin, then save the new spot" : "Drop a pin to save as your preferred location"}
+                className="h-7 px-2.5 rounded-md bg-[#1a6f34] text-white text-[11px] font-semibold hover:bg-[#145729] transition-colors"
+              >
+                {preferred ? "Edit" : "Set"}
+              </button>
+              {preferred && (
+                <button
+                  onClick={onClearHome}
+                  title="Forget the saved location"
+                  className="h-7 px-2.5 rounded-md bg-white border border-zinc-200 text-[11px] font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -459,6 +491,9 @@ export default function Sidebar({
   maintainer = false,
   viewOnly = false,
   setOpen,
+  preferred = null,
+  onRelocate = () => {},
+  onClearHome = () => {},
 }) {
   // Selecting a measurement tool jumps the sidebar straight to the
   // Measurements section (opens the sidebar + section, scrolls it into
@@ -494,6 +529,10 @@ export default function Sidebar({
           view={view}
           placesInfo={placesInfo}
           status={status}
+          preferred={preferred}
+          onRelocate={onRelocate}
+          onClearHome={onClearHome}
+          viewOnly={viewOnly}
         />
       </Section>
 

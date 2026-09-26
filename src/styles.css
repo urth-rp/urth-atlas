@@ -312,6 +312,9 @@ body {
   font-weight: 800;
   line-height: 1;
 }
+.leaflet-marker-draggable .atlas-home-pin {
+  cursor: grab;
+}
 .atlas-tooltip {
   background: #18181b;
   color: #fafafa;

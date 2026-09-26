@@ -310,10 +310,10 @@ export default function App() {
   const recenter = () => {
     if (!mapRef.current || !mapSize) return;
     if (preferred) {
+      // Saved pin stays invisible — just fly there.
       mapRef.current.setView([preferred.y, preferred.x], Math.max(mapRef.current.getZoom(), 1), {
         animate: true,
       });
-      setHomeDraft({ x: preferred.x, y: preferred.y });
       showToast("Showing preferred location");
       return;
     }
@@ -322,6 +322,20 @@ export default function App() {
     const c = view ?? { x: mapSize.W / 2, y: mapSize.H / 2 };
     setHomeDraft({ x: c.x, y: c.y });
     showToast("Marker dropped — click the pin to save it");
+  };
+
+  // Relocate flow: reveal the pin at the current view (saved pin stays
+  // invisible otherwise) so it can be dragged and re-saved.
+  const relocateHome = () => {
+    if (viewOnly) return;
+    const c = view ?? preferred ?? (mapSize ? { x: mapSize.W / 2, y: mapSize.H / 2 } : null);
+    if (!c) return;
+    setHomeDraft({ x: c.x, y: c.y });
+    showToast("Drag the pin to the new spot, then click it to save");
+  };
+
+  const moveHome = (pt) => {
+    setHomeDraft({ x: +pt.x, y: +pt.y });
   };
 
   const persistHome = (pt) => {
@@ -651,6 +665,9 @@ export default function App() {
           onClear={clearLocal}
           maintainer={maintainer}
           viewOnly={viewOnly}
+          preferred={preferred}
+          onRelocate={relocateHome}
+          onClearHome={clearHome}
         />
         )}
 
@@ -698,8 +715,9 @@ export default function App() {
             }
             onPopupAction={onPopupAction}
             viewOnly={viewOnly}
-            home={homeDraft ?? preferred}
-            homeIsSaved={!homeDraft && !!preferred}
+            home={homeDraft}
+            homeIsSaved={!!preferred}
+            onHomeMove={moveHome}
           />
           {!viewOnly && (
           <MapControls

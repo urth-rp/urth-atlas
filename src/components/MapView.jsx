@@ -122,6 +122,7 @@ export default function MapView({
   viewOnly = false,
   home = null,
   homeIsSaved = false,
+  onHomeMove = () => {},
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -147,6 +148,7 @@ export default function MapView({
   const onMapReadyRef = useRefLatest(onMapReady);
   const onContextMenuRef = useRefLatest(onContextMenu);
   const onPopupActionRef = useRefLatest(onPopupAction);
+  const onHomeMoveRef = useRefLatest(onHomeMove);
   const setPointsRef = useRefLatest(setPoints);
   // Timestamp of the last measurement-point dragend: the map click that
   // Leaflet fires right after a drag must not add a new point.
@@ -1267,8 +1269,8 @@ export default function MapView({
       `<div class="atlas-popup-coords">${latStr}, ${lngStr}</div>` +
       `<div class="atlas-popup-coords">X ${home.x.toFixed(0)} · Y ${home.y.toFixed(0)}</div>` +
       (homeIsSaved
-        ? ""
-        : `<div class="atlas-popup-missing">Not saved yet — save it to return here later.</div>`) +
+        ? `<div class="atlas-popup-missing">Saved — drag it elsewhere, then Save to move it.</div>`
+        : `<div class="atlas-popup-missing">Not saved yet — drag it or save it to return here later.</div>`) +
       (viewOnly
         ? ""
         : `<div class="atlas-popup-actions">` +
@@ -1286,9 +1288,18 @@ export default function MapView({
         iconAnchor: [13, 13],
       }),
       riseOnHover: true,
+      // Draft pin is draggable so relocate is direct manipulation (pan not
+      // required). dragend pushes the new spot up to App, which rebuilds
+      // this marker + popup with fresh coordinates.
+      draggable: !viewOnly,
     });
     mk.bindPopup(popup);
     mk.on("click", (e) => L.DomEvent.stopPropagation(e));
+    mk.on("dragend", () => {
+      measDragRef.current = Date.now();
+      const ll = mk.getLatLng();
+      onHomeMoveRef.current({ x: wrapX(ll.lng, W), y: wrapY(ll.lat, H) });
+    });
     mk.addTo(map);
     return () => {
       map.removeLayer(mk);
