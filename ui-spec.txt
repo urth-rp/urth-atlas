@@ -198,6 +198,12 @@ marked hypothetical. [StatusBar] cursor readout + credits.
 - Tile rows are BOTTOM-anchored (TMS, y=0 at bottom): 7525 % 256 != 0, so
   top-down files sit 101px off Leaflet's grid (hard seams). Columns stay
   left-anchored. CRS.Simple addresses rows as negative y — see tileUrlFor.
+- Every tile file is exactly 512×512 (TILES_V=5): Leaflet forces tiles to
+  the full slot with inline styles, so narrow "natural size" edge files
+  render STRETCHED (dateline strip ~2x wide at far zoom). The dateline
+  column wrap-fills its pad with real wrapped source content (map repeats
+  every W, correct for all copies); the top row pads ocean/transparent.
+  Bump TILES_V on any cutter-scheme change — tile URLs are stable.
 - Tiles are build artifacts (gitignored): fresh clones MUST run
   `npm run tiles:all` (needs sharp) or the base renders empty. CI builds
   them in deploy.yml before `vite build`. Container backdrop is flat

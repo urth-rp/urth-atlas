@@ -83,8 +83,8 @@ async function makeTile({ z, x, y, S }) {
   const rx0 = Math.floor(x * S);
   const rx1 = Math.min(Math.ceil((x + 1) * S), W);
   // Bottom-anchored row: y=0 is the bottom row (see header). srcTop can go
-  // negative for the topmost partial row — it is clamped and saved narrow
-  // (no padding; the ocean backdrop shows past the map edge).
+  // negative for the topmost partial row — it is clamped and top-padded on
+  // a full-size canvas below (the ocean backdrop shows past the map edge).
   const srcTop = H - (y + 1) * S;
   const srcBottom = H - y * S;
   const ry0 = Math.max(0, Math.floor(srcTop));
@@ -97,6 +97,16 @@ async function makeTile({ z, x, y, S }) {
   const oy = Math.round((ry0 - srcTop) * k);
   const dw = Math.max(1, Math.round(rw * k));
   const dh = Math.max(1, Math.round(rh * k));
+  // Dateline column: the slot extends past the source's right edge
+  // ((x+1)*S > W). Leaflet forces every tile to a full SIZE×SIZE box
+  // (inline styles), so a narrow "natural size" file would render
+  // STRETCHED ~2x at far zoom — countries visibly widen, correcting as
+  // native level-0 tiles take over. Fill the pad with the real wrapped
+  // source content ([0, overhang]): the map repeats every W, so this is
+  // geographically correct for every world copy (copies share files via
+  // the x-modulo in tileUrlFor) and can never double-draw wrong pixels.
+  const overhang = Math.max(0, (x + 1) * S - W);
+  const pw = overhang > 0 ? SIZE - dw : 0;
   let tile = sharp(src, { limitInputPixels: false }).extract({
     left: rx0, top: ry0, width: rw, height: rh,
   });
@@ -108,7 +118,11 @@ async function makeTile({ z, x, y, S }) {
     }
     return false;
   };
-  if (hasAlpha && !(await hasOpaque(tile))) return "skipped";
+  if (hasAlpha && !(await hasOpaque(tile))) {
+    // Own region is empty — but a dateline tile may still carry wrapped
+    // content, so only skip when there is no overhang either.
+    if (overhang <= 0) return "skipped";
+  }
   const dir = join(outdir, String(z), String(x));
   mkdirSync(dir, { recursive: true });
   let img = tile.resize(dw, dh, { fit: "fill", kernel: "lanczos3" });
@@ -117,27 +131,40 @@ async function makeTile({ z, x, y, S }) {
     FORMAT === "png" ? pipeline.png() :
     FORMAT === "webp" ? pipeline.webp({ quality: q }) :
     pipeline.jpeg({ quality: q });
-  // Partial edge tiles: the dateline (right) column is saved at NATURAL
-  // size with NO padding, so the neighboring world copy shows through the
-  // rest of the slot — any padding there is wrong (flat color notches
-  // through dateline land; wrapped content double-draws against the copy
-  // that owns those pixels). The top partial row keeps ocean/transparent
-  // padding (oy > 0 path below): nothing exists past the map's top edge,
-  // so padding there can never double-draw. Only fractional-S levels
-  // (unused by our -2..0 pyramids) need positioning for other offsets.
-  if (ox !== 0 || oy !== 0) {
-    // Narrow canvas: only as wide as the content (ox == 0 for our integer
-    // grids), so a dateline-corner tile never paints flat color over the
-    // neighboring copy's pixels. Full height: the top pad is ocean/void.
-    const cw = ox === 0 ? dw : SIZE;
+  // Partial edge tiles are composited onto a full SIZE×SIZE canvas (see
+  // below): the top partial row pads with ocean/transparent (nothing
+  // exists past the map's top edge, so padding there can never
+  // double-draw); the dateline column wrap-fills with real wrapped
+  // content. Only fractional-S levels (unused by our -2..0 pyramids)
+  // need positioning for other offsets.
+  if (ox !== 0 || oy !== 0 || pw > 0) {
+    // Full SIZE×SIZE canvas (Leaflet renders every tile stretched to the
+    // slot — narrow files distort). Content left-anchored at (ox, oy);
+    // dateline wrap-fill at (dw, oy); ocean/transparent pad for the top
+    // partial row (nothing exists past the map's top edge, so padding
+    // there can never double-draw). Only fractional-S levels (unused by
+    // our -2..0 pyramids) need positioning for other offsets.
     const canvas = sharp({
       create: HAS_ALPHA_OUT
-        ? { width: cw, height: SIZE, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
-        : { width: cw, height: SIZE, channels: 3, background: BG },
+        ? { width: SIZE, height: SIZE, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
+        : { width: SIZE, height: SIZE, channels: 3, background: BG },
     });
-    const buf = await encode(img, 100).toBuffer();
-    img = canvas.composite([{ input: buf, left: ox, top: oy }]);
+    const parts = [{ input: await encode(img, 100).toBuffer(), left: ox, top: oy }];
+    if (pw > 0) {
+      const wrapW = Math.min(Math.ceil(overhang), W);
+      const wrapped = sharp(src, { limitInputPixels: false }).extract({
+        left: 0, top: ry0, width: wrapW, height: rh,
+      });
+      const wrappedBuf = await encode(
+        wrapped.resize(pw, dh, { fit: "fill", kernel: "lanczos3" }), 100
+      ).toBuffer();
+      parts.push({ input: wrappedBuf, left: dw, top: oy });
+    }
+    img = canvas.composite(parts);
   }
+  // Probe the FINAL composited image for the transparency skip (a dateline
+  // tile whose own region is empty may still carry wrapped content).
+  if (hasAlpha && !(await hasOpaque(img))) return "skipped";
   await encode(img, QUALITY).toFile(join(dir, `${y}.${EXT}`));
   return "kept";
 }

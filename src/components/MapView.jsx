@@ -190,8 +190,11 @@ export default function MapView({
   // rebuilds, so browsers/CDNs would keep serving stale grids forever.
   // Bump TILES_V whenever the cutter scheme changes (1 = top-anchored
   // legacy, 2 = bottom-anchored 256px, 3 = bottom-anchored 512px,
-  // 4 = natural-size partial edge tiles, no padding).
-  const TILES_V = 4;
+  // 4 = natural-size partial edge tiles, no padding,
+  // 5 = full-size tiles everywhere: dateline column wrap-fills with real
+  // wrapped content (natural-size files rendered STRETCHED — Leaflet
+  // forces every tile to the full slot with inline styles)).
+  const TILES_V = 5;
   const TILE_PX = 512;
   const tileUrlFor = (dir, ext, W, H) => (coords) => {
     const S = TILE_PX / Math.pow(2, coords.z);
