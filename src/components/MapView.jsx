@@ -191,11 +191,13 @@ export default function MapView({
   // Bump TILES_V whenever the cutter scheme changes (1 = top-anchored
   // legacy, 2 = bottom-anchored 256px, 3 = bottom-anchored 512px,
   // 4 = natural-size partial edge tiles, no padding,
-  // 5 = full-size tiles everywhere: dateline column wrap-fills with real
-  // wrapped content (natural-size files rendered STRETCHED — Leaflet
-  // forces every tile to the full slot with inline styles)).
-  const TILES_V = 5;
-  const TILE_PX = 512;
+  // 5 = full-size wrap-filled dateline tiles,
+  // 6 = 468px tiles: 11232 = 24×468, so the dateline column is EXACT at
+  // every level (-2..0) and world copies align seamlessly (512 left a
+  // 992/480px remainder, misaligning every copy and duplicating content
+  // past the dateline).
+  const TILES_V = 6;
+  const TILE_PX = 468;
   const tileUrlFor = (dir, ext, W, H) => (coords) => {
     const S = TILE_PX / Math.pow(2, coords.z);
     const cols = Math.ceil(W / S);

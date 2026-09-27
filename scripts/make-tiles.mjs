@@ -58,11 +58,37 @@ if (!["jpeg", "png", "webp"].includes(FORMAT)) {
 }
 const EXT = FORMAT === "jpeg" ? "jpg" : FORMAT;
 const HAS_ALPHA_OUT = FORMAT !== "jpeg";
+// Canon dimensions: the tile grid (nx/ny, dateline math) is computed from
+// these, and sources are cropped/padded to match BEFORE cutting. The grid
+// must divide the world EXACTLY (11232 = 24×468) or wrapped world copies
+// can never align — a 1px source drift (cities is 11233 wide) would
+// otherwise spawn degenerate sliver tiles that render stretched.
+const CANON = arg("canon", "11232x7525");
+const [CANON_W, CANON_H] = CANON.split("x").map(Number);
 
 const meta = await sharp(src).metadata();
-const W = meta.width;
-const H = meta.height;
-const hasAlpha = meta.hasAlpha || meta.channels === 4;
+let W = meta.width;
+let H = meta.height;
+let hasAlpha = meta.hasAlpha || meta.channels === 4;
+// Normalise off-canon sources (crop right/bottom overflow, pad shortfall
+// with bg/transparent) so every layer shares one exact grid. Pure
+// crop/pad — no resampling, features never move.
+let srcInput = src;
+if (W !== CANON_W || H !== CANON_H) {
+  console.log(`normalising ${W}x${H} -> canon ${CANON_W}x${CANON_H}`);
+  srcInput = await sharp(src, { limitInputPixels: false })
+    .extract({ left: 0, top: 0, width: Math.min(W, CANON_W), height: Math.min(H, CANON_H) })
+    .extend({
+      right: Math.max(0, CANON_W - W),
+      bottom: Math.max(0, CANON_H - H),
+      background: HAS_ALPHA_OUT ? { r: 0, g: 0, b: 0, alpha: 0 } : BG,
+    })
+    .toBuffer();
+  const m2 = await sharp(srcInput).metadata();
+  W = m2.width;
+  H = m2.height;
+  hasAlpha = m2.hasAlpha || m2.channels === 4;
+}
 console.log(`source ${W}x${H} alpha=${hasAlpha} zooms ${MIN}..${MAX}`);
 
 // Build the full task list first, then run with bounded concurrency.
@@ -107,7 +133,7 @@ async function makeTile({ z, x, y, S }) {
   // the x-modulo in tileUrlFor) and can never double-draw wrong pixels.
   const overhang = Math.max(0, (x + 1) * S - W);
   const pw = overhang > 0 ? SIZE - dw : 0;
-  let tile = sharp(src, { limitInputPixels: false }).extract({
+  let tile = sharp(srcInput, { limitInputPixels: false }).extract({
     left: rx0, top: ry0, width: rw, height: rh,
   });
   const hasOpaque = async (pipeline) => {
@@ -152,7 +178,7 @@ async function makeTile({ z, x, y, S }) {
     const parts = [{ input: await encode(img, 100).toBuffer(), left: ox, top: oy }];
     if (pw > 0) {
       const wrapW = Math.min(Math.ceil(overhang), W);
-      const wrapped = sharp(src, { limitInputPixels: false }).extract({
+      const wrapped = sharp(srcInput, { limitInputPixels: false }).extract({
         left: 0, top: ry0, width: wrapW, height: rh,
       });
       const wrappedBuf = await encode(
