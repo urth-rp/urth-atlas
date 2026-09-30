@@ -112,6 +112,8 @@ function PinsSection({
         <p className="text-[11px] leading-4 text-amber-900 mt-1.5">
           Do not add city markers if you have not had them formally added by
           the cartographers. The markers are for linking to TEPwiki articles.
+        </p>
+        <p className="text-[11px] leading-4 text-amber-900 mt-1.5">
           New users? Please see the{" "}
           <a
             href="https://forum.theeastpacific.com/t/nation-registration-guide/16230"

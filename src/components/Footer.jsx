@@ -29,6 +29,15 @@ function Footer({ status }) {
           <kbd className="px-1 py-0.5 rounded bg-zinc-100 border border-zinc-200">+</kbd>/
           <kbd className="px-1 py-0.5 rounded bg-zinc-100 border border-zinc-200">−</kbd> zoom
         </span>
+        <a
+          href="https://github.com/urth-rp/urth-atlas/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Support and bug reports live on GitHub Issues"
+          className="px-2 py-0.5 rounded-full bg-white border border-[#d1d5db] text-zinc-600 font-semibold text-[10px] tracking-wide uppercase hover:border-[#1a6f34] hover:text-[#1a6f34] transition-colors"
+        >
+          Support via GitHub
+        </a>
         <span className="px-2 py-0.5 rounded-full bg-[#eef6ef] border border-[#1a6f34]/20 text-[#1a6f34] font-semibold text-[10px] tracking-wide uppercase">
           km + mi • Accurate • Linked to TEPwiki
         </span>
