@@ -50,8 +50,11 @@ duplicate title) | Markers
 (claim notice, add form, lists, submit).
 [Map] Fills remaining space. Bottom-right zoom/recenter, bottom-left
 layer pill (desktop), mobile tool/units bars on small screens.
-[Footer] Scale strip: 1px = 2.518km, 1px2 = 6.34km2, spherical figures
-marked hypothetical. [StatusBar] cursor readout + credits.
+[StatusBar] cursor readout + scale strip (1px = 2.518km, 1px2 = 6.34km2,
+spherical figures marked hypothetical) + credit links (Leaflet, CC
+BY-NC-SA 4.0, UrthMaps.com, GitHub Issues support). NOTE: the old
+Footer.jsx scale-strip component is deleted — StatusBar is the only
+bottom bar; do not resurrect Footer.
 
 ------------------------------------------------------------
 3. MAP + SCALE CANON

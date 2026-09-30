@@ -57,6 +57,18 @@ function StatusBar({ status, cursor }) {
         >
           UrthMaps.com
         </a>
+        <span className="text-zinc-300" aria-hidden="true">
+          |
+        </span>
+        <a
+          href="https://github.com/urth-rp/urth-atlas/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Support and bug reports live on GitHub Issues"
+          className="text-zinc-500 hover:text-[#1a6f34] transition-colors"
+        >
+          GitHub
+        </a>
       </div>
     </footer>
   );
