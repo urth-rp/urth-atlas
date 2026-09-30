@@ -101,20 +101,27 @@ function PinsSection({
     <div className="space-y-2.5">
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
         <div className="text-[10px] font-bold tracking-widest uppercase text-amber-700 mb-1">
-          Map claims must be approved
+          This map is not for map claims
         </div>
         <p className="text-[11px] leading-4 text-amber-900">
-          This map can fall behind approvals, so please don&apos;t use it for
-          your claims. The{" "}
+          Please wait before adding markers to the map until after your claim
+          has been approved, added to the map and synced with Urth Atlas.
+          When a cartographer pushes a map update you should see it within
+          20 minutes.
+        </p>
+        <p className="text-[11px] leading-4 text-amber-900 mt-1.5">
+          Do not add city markers if you have not had them formally added by
+          the cartographers. The markers are for linking to TEPwiki articles.
+          New users? Please see the{" "}
           <a
-            href="https://urthmaps.com/maps/export/urth.png"
+            href="https://forum.theeastpacific.com/t/nation-registration-guide/16230"
             target="_blank"
             rel="noopener noreferrer"
             className="font-bold underline hover:text-amber-700"
           >
-            most up to date political map
+            Nation Registration Guide
           </a>{" "}
-          lives on urthmaps.com.
+          first.
         </p>
       </div>
       {target && (

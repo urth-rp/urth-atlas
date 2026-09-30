@@ -33,8 +33,11 @@ Map Info has a Preferred location row (coords + Set/Edit + Clear);
 Edit reveals the pin at the current view for dragging + re-saving
 (popup acts save-home / clear-home; hidden in viewOnly embeds).
 [Claim notice] Lives in the Markers section (amber box, like the measurement
-disclaimer): claims must be approved, don't use this map for claims, link
-to the current political export (https://urthmaps.com/maps/export/urth.png).
+disclaimer): "This map is not for map claims" — wait until the claim is
+approved, mapped and synced (cartographer updates appear within ~20 min);
+no city markers without formal cartographer approval; markers exist for
+linking TEPwiki articles; new users get the Nation Registration Guide
+forum link.
 [Sidebar - 340px] Sections: Map Info (title "Urth Atlas", subtitle
 "TEP Urth · urthmaps.com", live layer/image/projection/zoom/center/
 markers/scale dashboard) | Base Layer (radio + opacity, dead zone 100-50
