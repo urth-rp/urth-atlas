@@ -8,21 +8,20 @@ export default function ContextMenu({ pos, pt, onClose, onWhat, onMeasure, onPin
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
 
-  const onKey = (e) => {
-    if (e.key === "Escape") onClose();
-  };
-
   useEffect(() => {
     const onDown = (e) => {
       if (ref.current && !ref.current.contains(e.target)) onClose();
     };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("mousedown", onDown);
     window.addEventListener("wheel", onClose);
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("mousedown", onDown);
       window.removeEventListener("wheel", onClose);
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [onClose]);
 

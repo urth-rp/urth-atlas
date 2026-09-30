@@ -15,6 +15,16 @@ import {
   MARKERS_SUBNAT_MOBILE_URL,
 } from "../lib/scale";
 import { wrapX, wrapY, latFromPixel, lngFromX, pixelFromLat, pixelFromLng } from "../lib/geo";
+import {
+  MODE_MEASURE,
+  MODE_PATH,
+  MODE_AREA,
+  MODE_NONE,
+  ACT_COPY,
+  ACT_REMOVE,
+  ACT_SAVE_HOME,
+  ACT_CLEAR_HOME,
+} from "../lib/tools";
 import { loadLayer, makeFallbackGrid } from "../lib/imageCache";
 import {
   fullWikiUrl,
@@ -33,7 +43,6 @@ const PICK_COLOR = "#c026d3";
 // caused major jank / OOMs. Overlays reuse the same window.
 // Mobile / low-memory devices get 3 copies: each 84MP decode is ~336MB and
 // mobile Safari jetsams the tab long before 5 copies finish decoding.
-const WORLD_COPIES = IS_LOW_MEM ? 3 : 5;
 const HALF_COPIES = IS_LOW_MEM ? 1 : 2;
 
 // ImageOverlay exposes the <img> via getElement(); TileLayer (GridLayer)
@@ -137,7 +146,6 @@ export default function MapView({
   const pointsRef = useRefLatest(points);
   const lockedRef = useRefLatest(locked);
   const onLockRef = useRefLatest(onLock);
-  const hoverRef = useRefLatest(hover);
   const layerRef = useRefLatest(layer);
   const placesRef = useRefLatest(places);
   const calibTargetRef = useRefLatest(calibTarget);
@@ -385,7 +393,7 @@ export default function MapView({
           onCursorRef.current(payload);
         }
         const m = modeRef.current;
-        if ((m && m !== "none") || calibTargetRef.current) setHover(pt);
+        if ((m && m !== MODE_NONE) || calibTargetRef.current) setHover(pt);
       });
     };
 
@@ -405,14 +413,14 @@ export default function MapView({
         return;
       }
       const m = modeRef.current;
-      if (!m || m === "none") return;
+      if (!m || m === MODE_NONE) return;
       // A dragend on a measurement point fires a map click right after —
       // ignore it so dragging never adds a point.
       if (Date.now() - measDragRef.current < 350) return;
       // Finalized measurements ignore clicks until Resume/Clear (or Esc).
       if (lockedRef.current) return;
       const pts = pointsRef.current;
-      if (m === "measure") {
+      if (m === MODE_MEASURE) {
         if (pts.length >= 2) {
           // Already complete — ignore stray clicks instead of restarting.
           return;
@@ -431,12 +439,12 @@ export default function MapView({
       // before 'dblclick', so the second click lands as a near-duplicate
       // vertex — drop it, then finalize if the shape has a result.
       const m = modeRef.current;
-      if ((m === "path" || m === "area") && !lockedRef.current) {
+      if ((m === MODE_PATH || m === MODE_AREA) && !lockedRef.current) {
         e.originalEvent?.preventDefault();
         const pts = pointsRef.current.slice(0, -1);
         setPoints(pts);
         const done =
-          (m === "path" && pts.length >= 2) || (m === "area" && pts.length >= 3);
+          (m === MODE_PATH && pts.length >= 2) || (m === MODE_AREA && pts.length >= 3);
         if (done) onLockRef.current?.();
       }
     };
@@ -940,7 +948,6 @@ export default function MapView({
     return () => {
       canceled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapSize, opacity]);
 
   // ---- Cities + subnational marker overlays (idle-deferred) ------------------
@@ -1111,8 +1118,8 @@ export default function MapView({
       if (mk) mk.openPopup();
     } else if (focus.type === "coord") {
       const { a, b } = focus;
-      let x = a;
-      let y = b;
+      let x;
+      let y;
       if (Math.abs(a) > 180 || Math.abs(b) > 90) {
         // "x, y" image pixels
         x = wrapX(a, mapSize.W);
@@ -1125,7 +1132,7 @@ export default function MapView({
       map.setView([y, x], Math.max(map.getZoom(), 1), { animate: true });
     }
     onFocusHandledRef.current();
-  }, [focus, mapSize]);
+  }, [focus, mapSize, onFocusHandledRef]);
 
   // ---- Measurement layer ---------------------------------------------------
   // Split in two so hovering never rebuilds the dots: the shape effect
@@ -1170,7 +1177,7 @@ export default function MapView({
       }
     });
 
-    if (mode === "measure" && pts.length === 2) {
+    if (mode === MODE_MEASURE && pts.length === 2) {
       L.polyline(
         [
           [pts[0].y, pts[0].x],
@@ -1180,14 +1187,14 @@ export default function MapView({
       ).addTo(grp);
     }
 
-    if (mode === "path" && pts.length >= 2) {
+    if (mode === MODE_PATH && pts.length >= 2) {
       L.polyline(
         pts.map((p) => [p.y, p.x]),
         { color: PICK_COLOR, weight: 3, opacity: 0.9 }
       ).addTo(grp);
     }
 
-    if (mode === "area" && pts.length >= 2) {
+    if (mode === MODE_AREA && pts.length >= 2) {
       L.polygon(
         pts.map((p) => [p.y, p.x]),
         {
@@ -1203,7 +1210,7 @@ export default function MapView({
     return () => {
       grp.remove();
     };
-  }, [points, mode, locked, mapSize]);
+  }, [points, mode, locked, mapSize, setPointsRef]);
 
   // ---- Measurement rubber-band preview -------------------------------------
   // Hover-only layer: cheap to rebuild every mousemove, never touches dots.
@@ -1216,7 +1223,7 @@ export default function MapView({
     const grp = L.layerGroup();
     const pts = points;
 
-    if (mode === "measure" && pts.length === 1) {
+    if (mode === MODE_MEASURE && pts.length === 1) {
       L.polyline(
         [
           [pts[0].y, pts[0].x],
@@ -1226,7 +1233,7 @@ export default function MapView({
       ).addTo(grp);
     }
 
-    if (mode === "path" && pts.length >= 1) {
+    if (mode === MODE_PATH && pts.length >= 1) {
       L.polyline(
         [
           [pts[pts.length - 1].y, pts[pts.length - 1].x],
@@ -1236,7 +1243,7 @@ export default function MapView({
       ).addTo(grp);
     }
 
-    if (mode === "area" && pts.length >= 2) {
+    if (mode === MODE_AREA && pts.length >= 2) {
       const draw = [...pts, hv];
       L.polygon(
         draw.map((p) => [p.y, p.x]),
@@ -1279,9 +1286,9 @@ export default function MapView({
       (viewOnly
         ? ""
         : `<div class="atlas-popup-actions">` +
-          `<button class="atlas-popup-btn atlas-popup-btn-primary" data-act="save-home" data-x="${home.x}" data-y="${home.y}">Save this spot</button>` +
+          `<button class="atlas-popup-btn atlas-popup-btn-primary" data-act="${ACT_SAVE_HOME}" data-x="${home.x}" data-y="${home.y}">Save this spot</button>` +
           (homeIsSaved
-            ? `<button class="atlas-popup-btn atlas-popup-btn-danger" data-act="clear-home" title="Forget the saved location">Clear</button>`
+            ? `<button class="atlas-popup-btn atlas-popup-btn-danger" data-act="${ACT_CLEAR_HOME}" title="Forget the saved location">Clear</button>`
             : "") +
           `</div>`) +
       `</div>`;
@@ -1309,7 +1316,7 @@ export default function MapView({
     return () => {
       map.removeLayer(mk);
     };
-  }, [home, homeIsSaved, mapSize, viewOnly]);
+  }, [home, homeIsSaved, mapSize, viewOnly, onHomeMoveRef]);
 
   // ---- Places layer ---------------------------------------------------------
   // Nations (text labels) and settlements (tiered dots) are separate Leaflet
@@ -1318,9 +1325,14 @@ export default function MapView({
   // shared refs used by search focus + popups.
   const placeMarkersRef = useRef({});
   const placeLatLngRef = useRef({});
+  // Imperative Leaflet marker registry (not render state): entries must be
+  // forgotten when their layer rebuilds. Deleting keys is the pattern —
+  // exempt from the immutability rule, which targets render-state mutation.
   const forgetKeys = (keys) => {
     for (const k of keys) {
+      // eslint-disable-next-line react-hooks/immutability
       delete placeMarkersRef.current[k];
+      // eslint-disable-next-line react-hooks/immutability
       delete placeLatLngRef.current[k];
     }
   };
@@ -1345,10 +1357,10 @@ export default function MapView({
       `<div class="atlas-popup-coords">X ${p.x.toFixed(0)} · Y ${p.y.toFixed(0)}${nearest ? ` · Nearest: ${escapeHtml(nearest)}` : ""}</div>` +
       `<div class="atlas-popup-wiki" hidden></div>` +
       `<div class="atlas-popup-actions">` +
-      `<button class="atlas-popup-btn" data-act="copy" data-name="${escapeHtml(p.name)}" data-x="${p.x}" data-y="${p.y}" data-lat="${lat}" data-lng="${lng}">Copy location</button>` +
+      `<button class="atlas-popup-btn" data-act="${ACT_COPY}" data-name="${escapeHtml(p.name)}" data-x="${p.x}" data-y="${p.y}" data-lat="${lat}" data-lng="${lng}">Copy location</button>` +
       (viewOnly
         ? ""
-        : `<button class="atlas-popup-btn atlas-popup-btn-danger" data-act="remove" data-name="${escapeHtml(p.name)}" data-x="${p.x}" data-y="${p.y}" title="Remove this marker">Remove</button>`) +
+        : `<button class="atlas-popup-btn atlas-popup-btn-danger" data-act="${ACT_REMOVE}" data-name="${escapeHtml(p.name)}" data-x="${p.x}" data-y="${p.y}" title="Remove this marker">Remove</button>`) +
       `</div>` +
       (href
         ? `<a class="atlas-popup-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">Learn more on TEPwiki <span aria-hidden="true">↗</span></a>`
@@ -1526,7 +1538,7 @@ export default function MapView({
     } else {
       map.getContainer().removeAttribute("title");
     }
-  }, [calibTarget]);
+  }, [calibTarget, calibTargetRef]);
 
   // ---- Render --------------------------------------------------------------
   const activeLayer = getLayer(layer);

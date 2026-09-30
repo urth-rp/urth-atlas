@@ -214,3 +214,21 @@ marked hypothetical. [StatusBar] cursor readout + credits.
   ocean #7499b4 (no ghost preview) in tiles mode.
 - Header brand mark: Phosphor globe-hemisphere-east duotone #6ea7a1
   (@phosphor-icons/react); the wordmark itself (.urth-logo) stays Bell MT.
+
+------------------------------------------------------------
+11. SAFETY TOOLING (lint / types / tests — all gate deploy.yml)
+------------------------------------------------------------
+- `npm run lint` (eslint flat config + react-hooks v7 rules — including
+  the immutability + set-state-in-effect rules; the Leaflet marker
+  registries carry justified disables, render state stays immutable).
+- `npm run typecheck` (tsc --checkJs over src/lib only): JSDoc typedefs
+  (MapPoint et al.) with zero build changes. Full .tsx migration is
+  deferred until the team grows — the JSDoc is the migration seed.
+- `npm run test` (vitest, colocated *.test.js): canon math (geo round-
+  trips, measure flat-vs-spherical, format, places merge/search, url
+  round-trip with a window stub). 24 tests, all deterministic.
+- String contracts live in src/lib/tools.js (MODE_* + ACT_* + isMeasTool):
+  popup data-act attributes and tool ids must import from there — a
+  retyped literal fails silently, a bad import fails at build. Result
+  kinds ("distance"|"path"|"area") are a SEPARATE namespace — do not
+  merge them with tool modes.

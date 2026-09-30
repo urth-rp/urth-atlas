@@ -12,6 +12,11 @@ export const REPO_OWNER = "urth-rp";
 export const REPO_NAME = "urth-atlas";
 export const BASE_BRANCH = "main";
 
+/**
+ * @param {string} path
+ * @param {string} token
+ * @param {{ method?: string, body?: any }} [opts]
+ */
 async function api(path, token, { method = "GET", body } = {}) {
   const r = await fetch(`https://api.github.com${path}`, {
     method,

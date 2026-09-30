@@ -1,10 +1,11 @@
 import { IconPlus, IconMinus, IconCompass, IconTrash } from "./icons";
 import { IS_LOW_MEM } from "../lib/device";
+import { MODE_MEASURE, MODE_AREA, MODE_PATH } from "../lib/tools";
 
 const TOOL_LABELS = [
-  { id: "measure", label: "Measure" },
-  { id: "area", label: "Area" },
-  { id: "path", label: "Path" },
+  { id: MODE_MEASURE, label: "Measure" },
+  { id: MODE_AREA, label: "Area" },
+  { id: MODE_PATH, label: "Path" },
 ];
 
 export default function MapControls({

@@ -24,6 +24,11 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # Safety gates (fail fast before the slow tile build): lint, types,
+      # and the src/lib unit suite.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
       # Tiled layers for the ?tiles=1 prototype: cut from the checked-in
       # masters into public/tiles/ (gitignored) so Vite copies them into
       # dist. ~2850 files, a few minutes on the runner (same sharp pattern

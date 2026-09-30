@@ -1,5 +1,6 @@
-import { KM_PER_PX, MI_PER_PX, KM2_PER_PX2, MI2_PER_PX2 } from "../lib/scale";
+import { KM_PER_PX, MI_PER_PX, KM2_PER_PX2 } from "../lib/scale";
 import { num, intNum } from "../lib/format";
+import { MODE_MEASURE, MODE_PATH, MODE_AREA, MODE_NONE } from "../lib/tools";
 import {
   IconRuler,
   IconArea,
@@ -8,13 +9,12 @@ import {
   IconUndo,
   IconCopy,
   IconLink,
-  IconCheck,
 } from "./icons";
 
 const TOOLS = [
-  { id: "measure", label: "Measure", icon: IconRuler, hint: "Click 2 points — it finishes itself. Drag a point to adjust it. Click the active tool again (or Esc) to exit." },
-  { id: "area", label: "Area", icon: IconArea, hint: "Click vertices, then Finish, double-click, or Enter. Drag a vertex to adjust it. Esc removes the last point." },
-  { id: "path", label: "Path", icon: IconPath, hint: "Click waypoints, then Finish, double-click, or Enter. Drag a waypoint to adjust it. Esc removes the last point." },
+  { id: MODE_MEASURE, label: "Measure", icon: IconRuler, hint: "Click 2 points — it finishes itself. Drag a point to adjust it. Click the active tool again (or Esc) to exit." },
+  { id: MODE_AREA, label: "Area", icon: IconArea, hint: "Click vertices, then Finish, double-click, or Enter. Drag a vertex to adjust it. Esc removes the last point." },
+  { id: MODE_PATH, label: "Path", icon: IconPath, hint: "Click waypoints, then Finish, double-click, or Enter. Drag a waypoint to adjust it. Esc removes the last point." },
 ];
 
 function ActionButton({ onClick, icon: Icon, label }) {
@@ -149,7 +149,7 @@ function DistanceCard({ d, units, onCopy, onShare }) {
         onCopy={onCopy}
         onShare={onShare}
         text={`${num(d.km, 1)} km (${num(d.mi, 1)} mi) • if spherical ${num(d.kmCorr, 1)} km / ${num(d.miCorr, 1)} mi • ${num(d.nm, 1)} NM`}
-        shareState={{ mode: "measure", pts: undefined }}
+        shareState={{ mode: MODE_MEASURE, pts: undefined }}
       />
     </ResultCard>
   );
@@ -193,7 +193,7 @@ function PathCard({ r, count, units, onCopy, onShare }) {
         onCopy={onCopy}
         onShare={onShare}
         text={`Path ${count} pts: ${num(r.totalKm, 1)} km (${num(r.totalMi, 1)} mi) • if spherical ${num(r.totalKmCorr, 1)} km`}
-        shareState={{ mode: "path", pts: undefined }}
+        shareState={{ mode: MODE_PATH, pts: undefined }}
       />
     </ResultCard>
   );
@@ -245,7 +245,7 @@ function AreaCard({ a, count, units, onCopy, onShare }) {
         onCopy={onCopy}
         onShare={onShare}
         text={`Area ${count} pts: ${num(a.areaKm2, 1)} km² (${num(a.areaMi2, 1)} mi²) • ${num(a.acres, 0)} ac`}
-        shareState={{ mode: "area", pts: undefined }}
+        shareState={{ mode: MODE_AREA, pts: undefined }}
       />
     </ResultCard>
   );
@@ -280,8 +280,8 @@ export default function MeasurementPanel({
   // Path/area stay open until finalized; measure completes on 2nd click.
   const finishable =
     !locked &&
-    ((mode === "path" && points.length >= 2) ||
-      (mode === "area" && points.length >= 3));
+    ((mode === MODE_PATH && points.length >= 2) ||
+      (mode === MODE_AREA && points.length >= 3));
 
   return (
     <div>
@@ -296,7 +296,7 @@ export default function MeasurementPanel({
               Finish
             </button>
           )}
-          {locked && mode !== "none" && (
+          {locked && mode !== MODE_NONE && (
             <button
               onClick={onResume}
               title="Resume adding points"

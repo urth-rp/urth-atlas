@@ -5,6 +5,27 @@ const RADIUS = 170;
 const MAP_W = 11232;
 const MAP_H = 7525;
 
+// Deterministic starfield (module scope: no render-scope mutation).
+function makeStars() {
+  const arr = [];
+  let seed = 7;
+  const rnd = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+  for (let i = 0; i < 130; i++) {
+    arr.push({
+      left: rnd() * 100,
+      top: rnd() * 100,
+      size: rnd() < 0.8 ? 1 : rnd() < 0.5 ? 1.5 : 2,
+      o: 0.35 + rnd() * 0.65,
+      tw: rnd() < 0.22,
+      hue: rnd() < 0.15 ? (rnd() < 0.5 ? "#8ab4f8" : "#f4c38b") : "#ffffff",
+    });
+  }
+  return arr;
+}
+
 export default function CylinderView({ imageUrl, cx, W, onRotateWorld, onWheelZoom }) {
   const sceneRef = useRef(null);
   const onWheelZoomRef = useRef(onWheelZoom);
@@ -28,25 +49,7 @@ export default function CylinderView({ imageUrl, cx, W, onRotateWorld, onWheelZo
   const height = circ * (MAP_H / MAP_W);
   const rotation = -(cx / (W || MAP_W)) * 360;
 
-  const stars = useMemo(() => {
-    const arr = [];
-    let seed = 7;
-    const rnd = () => {
-      seed = (seed * 9301 + 49297) % 233280;
-      return seed / 233280;
-    };
-    for (let i = 0; i < 130; i++) {
-      arr.push({
-        left: rnd() * 100,
-        top: rnd() * 100,
-        size: rnd() < 0.8 ? 1 : rnd() < 0.5 ? 1.5 : 2,
-        o: 0.35 + rnd() * 0.65,
-        tw: rnd() < 0.22,
-        hue: rnd() < 0.15 ? (rnd() < 0.5 ? "#8ab4f8" : "#f4c38b") : "#ffffff",
-      });
-    }
-    return arr;
-  }, []);
+  const stars = useMemo(() => makeStars(), []);
 
   const faces = [];
   for (let i = 0; i < FACES; i++) {

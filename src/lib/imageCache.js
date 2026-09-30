@@ -36,7 +36,7 @@ function txPut(db, key, blob) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).put(blob, key);
-    tx.oncomplete = () => resolve();
+    tx.oncomplete = () => resolve(undefined);
     tx.onerror = () => reject(tx.error);
   });
 }

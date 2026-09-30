@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import MapControls from "./components/MapControls";
@@ -13,6 +13,16 @@ import { num } from "./lib/format";
 import { IS_LOW_MEM } from "./lib/device";
 import { loadPreferred, savePreferred, clearPreferred } from "./lib/prefs";
 import { TILES_ON } from "./lib/tiles";
+import {
+  MODE_MEASURE,
+  MODE_PATH,
+  MODE_AREA,
+  MODE_NONE,
+  ACT_COPY,
+  ACT_REMOVE,
+  ACT_SAVE_HOME,
+  ACT_CLEAR_HOME,
+} from "./lib/tools";
 import { DATA_OVERLAYS } from "./lib/scale";
 import { EMBEDDED } from "./lib/embed";
 
@@ -51,7 +61,7 @@ function loadRemoved() {
 }
 
 export default function App() {
-  const [mode, setMode] = useState(initial.mode ?? "none");
+  const [mode, setMode] = useState(initial.mode ?? MODE_NONE);
   const [units, setUnits] = useState("both");
   const [points, setPoints] = useState(initial.pts ?? []);
   // Locked = measurement finalized (Finish / double-click / Enter). While
@@ -148,13 +158,17 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
-    } catch {}
+    } catch {
+      /* best-effort: private-mode storage may throw */
+    }
   }, [local]);
 
   useEffect(() => {
     try {
       localStorage.setItem(REMOVED_KEY, JSON.stringify(removed));
-    } catch {}
+    } catch {
+      /* best-effort: private-mode storage may throw */
+    }
   }, [removed]);
 
   // Load shared community places.
@@ -250,27 +264,30 @@ export default function App() {
 
   const result = useMemo(() => {
     if (!mapSize?.H) return null;
-    if (mode === "measure" && points.length >= 2)
+    if (mode === MODE_MEASURE && points.length >= 2)
       return { kind: "distance", data: measureDistance(points[0], points[1], mapSize.H) };
-    if (mode === "path" && points.length >= 2)
+    if (mode === MODE_PATH && points.length >= 2)
       return { kind: "path", data: measurePath(points, mapSize.H) };
-    if (mode === "area" && points.length >= 3)
+    if (mode === MODE_AREA && points.length >= 3)
       return { kind: "area", data: measureArea(points, mapSize.H) };
     return null;
   }, [mode, points, mapSize]);
 
-  const selectTool = (m) => {
-    // Clicking the active tool again toggles it off (unsticks the map).
-    if (m === mode) {
-      setMode("none");
+  const selectTool = useCallback(
+    (m) => {
+      // Clicking the active tool again toggles it off (unsticks the map).
+      if (m === mode) {
+        setMode(MODE_NONE);
+        setPoints([]);
+        setLocked(false);
+        return;
+      }
+      setMode(m);
       setPoints([]);
       setLocked(false);
-      return;
-    }
-    setMode(m);
-    setPoints([]);
-    setLocked(false);
-  };
+    },
+    [mode]
+  );
 
   // Callers validate there is a result to show (MapView checks counts
   // locally because App state is stale at click time; Enter checks stateRef).
@@ -278,11 +295,11 @@ export default function App() {
     setLocked(true);
   };
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setPoints([]);
-    setMode("none");
+    setMode(MODE_NONE);
     setLocked(false);
-  };
+  }, []);
 
   const onCopy = (text) => {
     navigator.clipboard?.writeText(text).then(
@@ -510,7 +527,7 @@ export default function App() {
   const onCtxMeasure = () => {
     if (!ctx) return;
     const pt = { x: ctx.pt.x, y: ctx.pt.y };
-    setMode("measure");
+    setMode(MODE_MEASURE);
     setPoints([pt]);
     setCtx(null);
     showToast("Click a second point");
@@ -519,17 +536,17 @@ export default function App() {
   // Leaflet popup quick actions (Copy location / Remove marker).
   const onPopupAction = (act, p) => {
     if (!p) return;
-    if (act === "copy") {
+    if (act === ACT_COPY) {
       const lat = p.lat != null ? `${Math.abs(p.lat).toFixed(2)}°${p.lat >= 0 ? "N" : "S"}` : "";
       const lng = p.lng != null ? `${Math.abs(p.lng).toFixed(2)}°${p.lng >= 0 ? "E" : "W"}` : "";
       onCopy(`${p.name} — X ${(+p.x).toFixed(0)}, Y ${(+p.y).toFixed(0)} (${lat}, ${lng})`);
-    } else if (act === "remove") {
+    } else if (act === ACT_REMOVE) {
       removePlace(p.name);
-    } else if (act === "save-home") {
+    } else if (act === ACT_SAVE_HOME) {
       if (viewOnly) return;
       persistHome({ x: +p.x, y: +p.y });
       mapRef.current?.closePopup();
-    } else if (act === "clear-home") {
+    } else if (act === ACT_CLEAR_HOME) {
       if (viewOnly) return;
       clearHome();
       mapRef.current?.closePopup();
@@ -564,16 +581,16 @@ export default function App() {
         else if (k === "-") mapRef.current?.zoomOut();
         return;
       }
-      if (k === "m") selectTool("measure");
-      else if (k === "a") selectTool("area");
-      else if (k === "p") selectTool("path");
+      if (k === "m") selectTool(MODE_MEASURE);
+      else if (k === "a") selectTool(MODE_AREA);
+      else if (k === "p") selectTool(MODE_PATH);
       else if (k === "enter") {
         // Finish the in-progress measurement (same as Finish button).
         const s = stateRef.current;
         if (!s.locked) {
-          if (s.mode === "measure" && s.points.length >= 2) setLocked(true);
-          else if (s.mode === "path" && s.points.length >= 2) setLocked(true);
-          else if (s.mode === "area" && s.points.length >= 3) setLocked(true);
+          if (s.mode === MODE_MEASURE && s.points.length >= 2) setLocked(true);
+          else if (s.mode === MODE_PATH && s.points.length >= 2) setLocked(true);
+          else if (s.mode === MODE_AREA && s.points.length >= 3) setLocked(true);
         }
       } else if (k === "escape") {
         if (target) setTarget(null);
@@ -586,7 +603,7 @@ export default function App() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [target, ctx, locked, points.length, viewOnly]);
+  }, [target, ctx, locked, points.length, viewOnly, selectTool, clearAll]);
 
   return (
     <div className="w-full h-[100dvh] flex flex-col bg-[#e5e3df] text-zinc-800 font-sans overflow-hidden">
@@ -599,7 +616,7 @@ export default function App() {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           onLocate={recenter}
-          onMeasure={() => selectTool("measure")}
+          onMeasure={() => selectTool(MODE_MEASURE)}
         />
       )}
       <div className="flex-1 flex min-h-0 relative">

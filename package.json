@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p jsconfig.json",
     "images:mobile": "node scripts/make-mobile-images.mjs",
     "tiles:political": "node scripts/make-tiles.mjs public/blank-political.png public/tiles/political --min -2 --max 0 --quality 90 --size 468",
     "tiles:cities": "node scripts/make-tiles.mjs public/cities.png public/tiles/cities --min -2 --max 0 --format png --size 468",
@@ -20,9 +23,15 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.1.11",
     "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
     "tailwindcss": "^4.1.11",
-    "vite": "^5.4.19"
+    "typescript": "^7.0.2",
+    "vite": "^5.4.19",
+    "vitest": "^3.2.7"
   }
 }

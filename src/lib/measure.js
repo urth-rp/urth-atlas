@@ -46,6 +46,11 @@ function legCorrKm(dx, dy, latA, latB) {
 }
 
 // Straight-line distance between two points.
+/**
+ * @param {import("./geo").MapPoint} a
+ * @param {import("./geo").MapPoint} b
+ * @param {number} H full-res map height in px
+ */
 export function measureDistance(a, b, H) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -74,6 +79,10 @@ export function measureDistance(a, b, H) {
 }
 
 // Summed distance along a multi-point path.
+/**
+ * @param {import("./geo").MapPoint[]} points
+ * @param {number} H full-res map height in px
+ */
 export function measurePath(points, H) {
   let totalPix = 0;
   let totalKm = 0;
@@ -105,6 +114,10 @@ export function measurePath(points, H) {
 }
 
 // Shoelace polygon area.
+/**
+ * @param {import("./geo").MapPoint[]} points
+ * @param {number} H full-res map height in px
+ */
 export function measureArea(points, H) {
   let sum = 0;
   for (let i = 0; i < points.length; i++) {

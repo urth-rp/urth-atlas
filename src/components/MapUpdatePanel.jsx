@@ -1,7 +1,5 @@
 import { useRef, useState } from "react";
 import {
-  REPO_OWNER,
-  REPO_NAME,
   createBlobFromFile,
   commitFiles,
   createBranch,

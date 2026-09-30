@@ -28,12 +28,13 @@ export async function loadPreferred() {
   }
 }
 
+/** @param {import("./geo").MapPoint} pt */
 export async function savePreferred(pt) {
   const db = await openDb();
   return await new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).put({ x: +pt.x, y: +pt.y }, PREF_HOME);
-    tx.oncomplete = () => resolve();
+    tx.oncomplete = () => resolve(undefined);
     tx.onerror = () => reject(tx.error);
   });
 }
@@ -44,7 +45,7 @@ export async function clearPreferred() {
     await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
       tx.objectStore(STORE).delete(PREF_HOME);
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => resolve(undefined);
       tx.onerror = () => reject(tx.error);
     });
   } catch {

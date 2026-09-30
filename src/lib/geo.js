@@ -17,26 +17,39 @@ export const LAT_SPAN = 150;
 export const GRAT_LAT_STEP = 15;
 export const GRAT_LNG_STEP = 20;
 
+/**
+ * A point in full-res map pixels (CRS.Simple space).
+ * @typedef {Object} MapPoint
+ * @property {number} x - east pixel, wraps every W
+ * @property {number} y - north pixel, measured UP from the bottom
+ */
+
+/** @param {number} y @param {number} H @returns {number} latitude in degrees */
 export function latFromPixel(y, H) {
   return (y / H) * LAT_SPAN - LAT_TOP;
 }
 
+/** @param {number} lat @param {number} H @returns {number} north pixel */
 export function pixelFromLat(lat, H) {
   return ((lat + LAT_TOP) / LAT_SPAN) * H;
 }
 
+/** @param {number} x @param {number} W @returns {number} longitude in degrees */
 export function lngFromX(x, W) {
   return (x / W - 0.5) * 360;
 }
 
+/** @param {number} lng @param {number} W @returns {number} east pixel */
 export function pixelFromLng(lng, W) {
   return ((lng + 180) / 360) * W;
 }
 
+/** @param {number} x @param {number} W @returns {number} x wrapped into [0, W) */
 export function wrapX(x, W) {
   return ((x % W) + W) % W;
 }
 
+/** @param {number} y @param {number} H @returns {number} y wrapped into [0, H) */
 export function wrapY(y, H) {
   return ((y % H) + H) % H;
 }

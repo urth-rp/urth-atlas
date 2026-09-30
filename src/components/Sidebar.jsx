@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isMeasTool } from "../lib/tools";
 import { BASE_MAPS, DATA_OVERLAYS, getLayer, KM_PER_PX, MI_PER_PX, KM2_PER_PX2 } from "../lib/scale";
 import { searchPlaces } from "../lib/places";
 import { latFromPixel, lngFromX } from "../lib/geo";
@@ -27,10 +28,14 @@ const KINDS = [
 
 function Section({ title, children, defaultOpen = true, openSignal = null }) {
   const [open, setOpen] = useState(defaultOpen);
-  // External nudge (e.g. a tool was selected) — force the section open.
-  useEffect(() => {
+  // External nudge (e.g. a tool was selected) forces the section open.
+  // Render-time adjustment (docs-sanctioned alternative to setState in an
+  // effect): when the signal value changes, apply it during render.
+  const [lastSignal, setLastSignal] = useState(openSignal);
+  if (openSignal !== lastSignal) {
+    setLastSignal(openSignal);
     if (openSignal) setOpen(true);
-  }, [openSignal]);
+  }
   return (
     <section className="border-b border-[#e5e7eb]">
       <button
@@ -498,18 +503,17 @@ export default function Sidebar({
   // view) so there's no manual scrolling while trying to measure.
   const measWrapRef = useRef(null);
   const prevModeRef = useRef(mode);
-  const isMeasTool = mode === "measure" || mode === "path" || mode === "area";
+  const measActive = isMeasTool(mode);
   useEffect(() => {
-    const was = prevModeRef.current;
-    const wasMeas = was === "measure" || was === "path" || was === "area";
-    if (isMeasTool && !wasMeas) {
+    const wasMeas = isMeasTool(prevModeRef.current);
+    if (measActive && !wasMeas) {
       setOpen?.(true);
       requestAnimationFrame(() => {
         measWrapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
     prevModeRef.current = mode;
-  }, [mode, isMeasTool, setOpen]);
+  }, [mode, measActive, setOpen]);
 
   if (!open) return null;
 
@@ -676,7 +680,7 @@ export default function Sidebar({
       </Section>
 
       <div ref={measWrapRef} className="scroll-mt-2">
-      <Section title="Measurements" openSignal={isMeasTool ? mode : null}>
+      <Section title="Measurements" openSignal={measActive ? mode : null}>
         <MeasurementPanel
           mode={mode}
           setMode={setMode}
