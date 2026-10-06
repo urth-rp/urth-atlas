@@ -2,6 +2,15 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import { searchPlaces } from "../lib/places";
 import { IconSearch, IconArrow } from "./icons";
 
+// Dropdown dot colors mirror the map: nations brand green, capitals and
+// cities amber, towns gray (see MapView SETTLEMENT_STYLE).
+const KIND_DOT = {
+  nation: "bg-[#1a6f34]",
+  capital: "bg-amber-500",
+  city: "bg-amber-500",
+  town: "bg-[#a8a29e]",
+};
+
 export default function SearchBar({ query, setQuery, onPlace, places }) {
   const [open, setOpen] = useState(false);
   const boxRef = useRef(null);
@@ -73,7 +82,7 @@ export default function SearchBar({ query, setQuery, onPlace, places }) {
             </div>
           )}
           {matches.map((p) => {
-            const isCity = p.kind === "city";
+            const unplaced = p.x == null || p.y == null;
             return (
               <button
                 key={p.name}
@@ -84,13 +93,13 @@ export default function SearchBar({ query, setQuery, onPlace, places }) {
                 className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-[#e8f3ea] text-left transition-colors"
               >
                 <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${isCity ? "bg-amber-500" : "bg-[#1a6f34]"}`}
+                  className={`w-2 h-2 rounded-full shrink-0 ${KIND_DOT[p.kind] ?? "bg-[#1a6f34]"}`}
                 />
                 <span className="text-[13px] font-medium text-zinc-800 truncate">
                   {p.name}
                 </span>
                 <span className="ml-auto text-[9px] uppercase tracking-wide text-zinc-400 font-semibold shrink-0">
-                  {isCity ? "city" : "nation"}
+                  {p.kind ?? "place"}{unplaced ? " · not placed" : ""}
                 </span>
               </button>
             );

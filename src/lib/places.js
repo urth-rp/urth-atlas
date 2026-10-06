@@ -1,21 +1,32 @@
 // Places utilities. Places are dynamic — sourced from the shared
 // positions.json (community) merged with the user's local edits. Each
-// place is `{ name, kind: "nation"|"city", href, x, y }` where x/y are
-// map pixels (CRS.Simple) and may be absent until the place is placed.
-// Nations that are territories may carry an optional `territory` flag
-// string, switching the pin to the subnational (Bell MT Bold Italic) style.
+// place is `{ name, kind: "nation"|"capital"|"city"|"town", href, x, y }`
+// where x/y are map pixels (CRS.Simple) and may be absent until the place
+// is placed. Nations that are territories may carry an optional `territory`
+// flag string, switching the pin to the subnational (Bell MT Bold Italic)
+// style.
+
+// Search tie-break order when text scores are equal: nations first, then
+// settlements by tier (capital > city > town), then alphabetical.
+const KIND_ORDER = { nation: 0, capital: 1, city: 2, town: 3 };
 
 export function searchPlaces(places, query, limit = 8) {
   const q = normalize(query.trim());
   if (!q) return [];
   const scored = [];
   for (const p of places) {
+    if (p.name == null) continue;
     const n = normalize(p.name);
     if (n === q) scored.push({ p, score: 0 });
     else if (n.startsWith(q)) scored.push({ p, score: 1 });
     else if (n.includes(q)) scored.push({ p, score: 2 });
   }
-  scored.sort((a, b) => a.score - b.score || (a.p.kind === "nation" ? -1 : 1));
+  scored.sort(
+    (a, b) =>
+      a.score - b.score ||
+      (KIND_ORDER[a.p.kind] ?? 4) - (KIND_ORDER[b.p.kind] ?? 4) ||
+      a.p.name.localeCompare(b.p.name)
+  );
   return scored.slice(0, limit).map((s) => s.p);
 }
 

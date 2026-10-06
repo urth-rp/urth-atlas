@@ -1116,6 +1116,13 @@ export default function MapView({
       map.setView(ll, -0.25);
       const mk = placeMarkersRef.current?.[focus.name];
       if (mk) mk.openPopup();
+    } else if (focus.name) {
+      // Marker not mounted (e.g. settlement searched while the Cities
+      // layer is off) — still fly to its coordinates from place data.
+      const hit = placesRef.current.find((q) => q.name === focus.name);
+      if (hit && hit.x != null && hit.y != null) {
+        map.setView([hit.y, hit.x], -0.25);
+      }
     } else if (focus.type === "coord") {
       const { a, b } = focus;
       let x;
@@ -1132,7 +1139,7 @@ export default function MapView({
       map.setView([y, x], Math.max(map.getZoom(), 1), { animate: true });
     }
     onFocusHandledRef.current();
-  }, [focus, mapSize, onFocusHandledRef]);
+  }, [focus, mapSize, onFocusHandledRef, placesRef]);
 
   // ---- Measurement layer ---------------------------------------------------
   // Split in two so hovering never rebuilds the dots: the shape effect

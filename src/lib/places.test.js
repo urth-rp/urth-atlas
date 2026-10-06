@@ -44,6 +44,31 @@ describe("searchPlaces", () => {
   it("returns [] for blank queries", () => {
     expect(searchPlaces(places, "   ", 8)).toEqual([]);
   });
+
+  it("returns capitals, cities, and towns — not just nations", () => {
+    const mixed = [
+      { name: "Riverton", kind: "town" },
+      { name: "River City", kind: "city" },
+      { name: "River Capital", kind: "capital" },
+      { name: "Rivernation", kind: "nation" },
+    ];
+    const out = searchPlaces(mixed, "river", 8).map((p) => p.kind);
+    expect(out).toContain("town");
+    expect(out).toContain("city");
+    expect(out).toContain("capital");
+    expect(out).toContain("nation");
+  });
+
+  it("tie-breaks equal text scores by kind: nation, capital, city, town", () => {
+    const mixed = [
+      { name: "Azora Town", kind: "town" },
+      { name: "Azora City", kind: "city" },
+      { name: "Azora Capital", kind: "capital" },
+      { name: "Azora Nation", kind: "nation" },
+    ];
+    const out = searchPlaces(mixed, "azora", 8).map((p) => p.kind);
+    expect(out).toEqual(["nation", "capital", "city", "town"]);
+  });
 });
 
 describe("placeLatLng", () => {
