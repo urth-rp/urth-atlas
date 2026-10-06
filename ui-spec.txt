@@ -21,7 +21,9 @@ served at the domain root — base "/").
 2. LAYOUT
 ------------------------------------------------------------
 [Header - 56px] Menu toggle + globe + "Urth Atlas" wordmark | centered
-search ("Search Urth Atlas") | locate + measure buttons. Locate flies to
+search ("Search Urth Atlas", dropdown shows each match's marker type —
+Nation/Capital/City/Town/Territory — and search covers all placed
+community markers) | locate + measure + random-place buttons. Locate flies to
 the saved preferred location (IndexedDB urth-atlas-prefs) when one exists;
 with nothing saved it stays put and drops the home pin at the current view
 center. The pin ONLY ever shows as a draft (right after locate-with-

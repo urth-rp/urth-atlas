@@ -1,7 +1,7 @@
 import { memo } from "react";
 import SearchBar from "./SearchBar";
 import { GlobeHemisphereEast } from "@phosphor-icons/react";
-import { IconMenu, IconTarget, IconRuler } from "./icons";
+import { IconMenu, IconTarget, IconRuler, IconDice } from "./icons";
 
 function Header({
   query,
@@ -12,6 +12,7 @@ function Header({
   setSidebarOpen,
   onLocate,
   onMeasure,
+  onRandom,
 }) {
   return (
     <header className="h-[56px] shrink-0 flex items-center gap-3 px-3 bg-white border-b border-[#e5e7eb] z-[1001] relative">
@@ -46,6 +47,13 @@ function Header({
           className="w-9 h-9 rounded-md flex items-center justify-center text-zinc-600 hover:bg-[#f3f4f6]"
         >
           <IconRuler width={18} height={18} />
+        </button>
+        <button
+          onClick={onRandom}
+          title="Random place"
+          className="w-9 h-9 rounded-md flex items-center justify-center text-zinc-600 hover:bg-[#f3f4f6]"
+        >
+          <IconDice width={18} height={18} />
         </button>
       </div>
     </header>

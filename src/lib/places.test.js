@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergePlaces, searchPlaces, placeLatLng } from "./places";
+import { mergePlaces, searchPlaces, placeLatLng, kindLabel, kindDot } from "./places";
 
 describe("mergePlaces", () => {
   it("merges shared and local, local wins", () => {
@@ -76,5 +76,29 @@ describe("placeLatLng", () => {
     expect(placeLatLng({ x: 10, y: 20 }, { W: 1, H: 1 })).toEqual([20, 10]);
     expect(placeLatLng({ name: "unplaced" }, { W: 1, H: 1 })).toBeNull();
     expect(placeLatLng({ x: 1, y: 1 }, null)).toBeNull();
+  });
+});
+
+describe("kindLabel", () => {
+  it("returns the marker type for each kind", () => {
+    expect(kindLabel({ kind: "nation" })).toBe("nation");
+    expect(kindLabel({ kind: "capital" })).toBe("capital");
+    expect(kindLabel({ kind: "city" })).toBe("city");
+    expect(kindLabel({ kind: "town" })).toBe("town");
+  });
+
+  it("labels nations with a territory flag as Territory", () => {
+    expect(kindLabel({ kind: "nation", territory: "Territory" })).toBe("Territory");
+    expect(kindLabel({ kind: "nation", territory: "  " })).toBe("nation");
+  });
+});
+
+describe("kindDot", () => {
+  it("gives settlements their own colors", () => {
+    expect(kindDot({ kind: "nation" })).toBe("bg-[#1a6f34]");
+    expect(kindDot({ kind: "capital" })).toBe("bg-amber-500");
+    expect(kindDot({ kind: "city" })).toBe("bg-amber-500");
+    expect(kindDot({ kind: "town" })).toBe("bg-[#a8a29e]");
+    expect(kindDot({ kind: "nation", territory: "Territory" })).toBe("bg-[#475569]");
   });
 });

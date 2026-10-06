@@ -171,3 +171,14 @@ export const IconCursor = (p) => (
     <path d="M4 4l7.07 17 2.51-7.39L21 11.07z" />
   </svg>
 );
+
+export const IconDice = (p) => (
+  <svg {...base} {...p}>
+    <rect width="18" height="18" x="3" y="3" rx="3" />
+    <circle cx="8.5" cy="8.5" r="0.75" fill="currentColor" stroke="none" />
+    <circle cx="15.5" cy="8.5" r="0.75" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    <circle cx="8.5" cy="15.5" r="0.75" fill="currentColor" stroke="none" />
+    <circle cx="15.5" cy="15.5" r="0.75" fill="currentColor" stroke="none" />
+  </svg>
+);

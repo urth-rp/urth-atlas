@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { isMeasTool } from "../lib/tools";
 import { BASE_MAPS, DATA_OVERLAYS, getLayer, KM_PER_PX, MI_PER_PX, KM2_PER_PX2 } from "../lib/scale";
-import { searchPlaces } from "../lib/places";
+import { searchPlaces, kindDot } from "../lib/places";
 import { latFromPixel, lngFromX } from "../lib/geo";
 import { IS_LOW_MEM } from "../lib/device";
 import { EMBED_SIZES, embedSnippet } from "../lib/url";
@@ -229,7 +229,7 @@ function PinsSection({
                   className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#e8f3ea] text-left transition-colors"
                 >
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${p.kind === "city" ? "bg-amber-500" : "bg-[#1a6f34]"}`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${kindDot(p)}`}
                   />
                   <span className="text-[13px] font-medium text-zinc-800 truncate">{p.name}</span>
                 </button>
@@ -243,7 +243,7 @@ function PinsSection({
                 className="flex items-center gap-2 px-2.5 py-1.5 border-b border-[#e5e7eb] last:border-0"
               >
                 <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${p.kind === "city" ? "bg-amber-500" : "bg-[#1a6f34]"}`}
+                  className={`w-2 h-2 rounded-full shrink-0 ${kindDot(p)}`}
                 />
                 <span className="text-[12px] text-zinc-700 truncate flex-1">{p.name}</span>
                 {p.x != null ? (

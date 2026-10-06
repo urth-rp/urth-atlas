@@ -10,6 +10,33 @@
 // settlements by tier (capital > city > town), then alphabetical.
 const KIND_ORDER = { nation: 0, capital: 1, city: 2, town: 3 };
 
+// Display label for a place's marker type. Territories are stored as kind
+// "nation" with a `territory` flag but render as Territory on the map, so
+// search and lists must say Territory too — same rule as the map popup.
+export function kindLabel(p) {
+  if (p.kind === "nation" && typeof p.territory === "string" && p.territory.trim()) {
+    return "Territory";
+  }
+  return p.kind ?? "place";
+}
+
+// Dropdown/list dot colors mirror the map: nations brand green, capitals
+// and cities amber, towns gray, territories slate (see MapView
+// SETTLEMENT_STYLE and the subnational text style).
+export function kindDot(p) {
+  if (p.kind === "nation" && typeof p.territory === "string" && p.territory.trim()) {
+    return "bg-[#475569]";
+  }
+  switch (p.kind) {
+    case "capital":
+    case "city":
+      return "bg-amber-500";
+    case "town":
+      return "bg-[#a8a29e]";
+    default:
+      return "bg-[#1a6f34]";
+  }
+}
 export function searchPlaces(places, query, limit = 8) {
   const q = normalize(query.trim());
   if (!q) return [];

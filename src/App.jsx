@@ -516,6 +516,18 @@ export default function App() {
     }
   };
 
+  // Fly to a random placed marker (nations, capitals, cities, towns —
+  // anything with coordinates). Unplaced names are skipped, not focused.
+  const onRandomPlace = () => {
+    const placed = places.filter((p) => p.x != null && p.y != null);
+    if (!placed.length) {
+      showToast("No placed markers yet");
+      return;
+    }
+    const pick = placed[Math.floor(Math.random() * placed.length)];
+    onPlace({ name: pick.name, kind: pick.kind });
+  };
+
   // ---- Context menu handlers ---------------------------------------------
   const onCtxWhat = () => {
     if (!ctx) return;
@@ -617,6 +629,7 @@ export default function App() {
           setSidebarOpen={setSidebarOpen}
           onLocate={recenter}
           onMeasure={() => selectTool(MODE_MEASURE)}
+          onRandom={onRandomPlace}
         />
       )}
       <div className="flex-1 flex min-h-0 relative">
