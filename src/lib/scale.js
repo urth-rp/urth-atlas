@@ -14,7 +14,7 @@ export const BASE_LAYERS = [
   {
     id: "map",
     label: "Political",
-    sub: "Blank political map",
+    sub: "Borders",
     url: `${import.meta.env.BASE_URL}blank-political.webp?v=3`,
     fallbackUrl: `${import.meta.env.BASE_URL}blank-political.png?v=3`,
     // 2048px variant for low-memory devices (see scripts/make-mobile-images.mjs).
