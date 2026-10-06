@@ -40,7 +40,9 @@ linking TEPwiki articles; new users get the Nation Registration Guide
 forum link.
 [Sidebar - 340px] Sections: Map Info (title "Urth Atlas", subtitle
 "TEP Urth · urthmaps.com", live layer/image/projection/zoom/center/
-markers/scale dashboard) | Base Layer (radio + opacity, dead zone 100-50
+markers/scale dashboard + Preferred location row + Share this view:
+Share link copies the deep link, Embed reveals Small/Medium/Large
+presets with a readonly iframe snippet + Copy embed code) | Base Layer (radio + opacity, dead zone 100-50
 solid, fades 50-0 revealing the TEPmap underlay on desktop) | Thematic
 Layers (stackable data overlays + overlay opacity) | Overlays (scale bar,
 grid, pixel grid, coordinates, cities, subnational, nation markers) |
@@ -177,6 +179,10 @@ bottom bar; do not resurrect Footer.
   m/a/p/Enter measurement shortcuts are disabled. What remains is the map,
   marker/wiki popups, "Copy location", and pan/zoom (+/- keys). Intended for
   a clean forum iframe.
+- Snippet builder: Map Info > Share this view > Embed (src/lib/url.js
+  embedLink/embedSnippet, EMBED_SIZES presets). The src always carries
+  ?embed=1; the builder is pure (never touches window.history) so copying
+  embed code can't trap the live tab in embed mode on reload.
 - Intended for iframe posts (e.g. Discourse, whose allowed_iframes setting
   must list the site origin). GitHub Pages sends no X-Frame-Options, so no
   host-side header work is needed.

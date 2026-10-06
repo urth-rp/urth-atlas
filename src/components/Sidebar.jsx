@@ -4,9 +4,10 @@ import { BASE_MAPS, DATA_OVERLAYS, getLayer, KM_PER_PX, MI_PER_PX, KM2_PER_PX2 }
 import { searchPlaces } from "../lib/places";
 import { latFromPixel, lngFromX } from "../lib/geo";
 import { IS_LOW_MEM } from "../lib/device";
+import { EMBED_SIZES, embedSnippet } from "../lib/url";
 import MeasurementPanel from "./MeasurementPanel";
 import MapUpdatePanel from "./MapUpdatePanel";
-import { IconChevron, IconPin, IconTrash } from "./icons";
+import { IconChevron, IconPin, IconTrash, IconLink, IconCopy } from "./icons";
 
 // Satellite (+ its cloud layer) is disabled on low-memory devices.
 // Phones additionally only get layers with downscaled mobile variants —
@@ -363,7 +364,7 @@ function MapInfoRow({ label, value }) {
   );
 }
 
-function MapInfoBlock({ layer, mapSize, view, placesInfo, status, preferred, onRelocate, onClearHome, viewOnly }) {
+function MapInfoBlock({ layer, mapSize, view, placesInfo, status, preferred, onRelocate, onClearHome, viewOnly, showNations, onShare, onCopy }) {
   const active = getLayer(layer);
   const counts = useMemo(() => {
     const c = { nation: 0, capital: 0, city: 0, town: 0 };
@@ -372,6 +373,16 @@ function MapInfoBlock({ layer, mapSize, view, placesInfo, status, preferred, onR
     }
     return c;
   }, [placesInfo]);
+  const [showEmbed, setShowEmbed] = useState(false);
+  const [embedSize, setEmbedSize] = useState("medium");
+  const preset = EMBED_SIZES.find((s) => s.id === embedSize) ?? EMBED_SIZES[1];
+  const snippet = useMemo(() => {
+    if (!view) return "";
+    return embedSnippet(
+      { at: [view.x, view.y], z: view.z, nations: showNations, layer },
+      { width: preset.width, height: preset.height }
+    );
+  }, [view, showNations, layer, preset]);
   const center =
     view && mapSize?.W
       ? `${Math.abs(latFromPixel(view.y, mapSize.H)).toFixed(1)}°${latFromPixel(view.y, mapSize.H) >= 0 ? "N" : "S"}, ${Math.abs(lngFromX(view.x, mapSize.W)).toFixed(1)}°${lngFromX(view.x, mapSize.W) >= 0 ? "E" : "W"}`
@@ -437,6 +448,66 @@ function MapInfoBlock({ layer, mapSize, view, placesInfo, status, preferred, onR
             </div>
           )}
         </div>
+      </div>
+      <div className="mt-2 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-2.5 py-1.5">
+        <div className="text-[11px] text-[#6b7280]">Share this view</div>
+        <div className="mt-1.5 flex gap-1.5">
+          <button
+            onClick={() => onShare?.()}
+            disabled={!view}
+            title="Copy a link to this location"
+            className="flex-1 h-7 px-2 rounded-md bg-white border border-zinc-200 text-[11px] font-semibold text-zinc-700 flex items-center justify-center gap-1.5 hover:bg-zinc-50 transition-colors disabled:opacity-40"
+          >
+            <IconLink width={13} height={13} /> Share link
+          </button>
+          <button
+            onClick={() => setShowEmbed((v) => !v)}
+            disabled={!view}
+            title="Get iframe embed code for this location"
+            aria-expanded={showEmbed}
+            className="flex-1 h-7 px-2 rounded-md bg-white border border-zinc-200 text-[11px] font-semibold text-zinc-700 flex items-center justify-center gap-1.5 hover:bg-zinc-50 transition-colors disabled:opacity-40"
+          >
+            <IconCopy width={13} height={13} /> Embed
+          </button>
+        </div>
+        {showEmbed && (
+          <div className="mt-2 pt-2 border-t border-[#e5e7eb]">
+            <div className="flex gap-1 rounded-md bg-white p-1 border border-[#e5e7eb]">
+              {EMBED_SIZES.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setEmbedSize(s.id)}
+                  title={`${s.width}×${s.height}`}
+                  className={`flex-1 h-6 rounded text-[11px] font-bold uppercase transition-all ${
+                    embedSize === s.id
+                      ? "bg-white shadow-sm text-[#111827] border border-[#d1d5db]"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-1.5 text-[11px] font-mono text-[#6b7280]">
+              {preset.width}×{preset.height}px · bare view-only embed
+            </div>
+            <textarea
+              readOnly
+              value={snippet}
+              rows={3}
+              spellCheck={false}
+              onFocus={(e) => e.target.select()}
+              className="mt-1.5 w-full rounded-md bg-white border border-[#e5e7eb] px-2 py-1.5 text-[11px] font-mono text-zinc-700 outline-none focus:border-[#1a6f34] resize-y"
+            />
+            <button
+              onClick={() => snippet && onCopy?.(snippet)}
+              disabled={!snippet}
+              className="mt-1.5 w-full h-7 rounded-md bg-[#1a6f34] text-white text-[11px] font-semibold hover:bg-[#145729] transition-colors disabled:opacity-40"
+            >
+              Copy embed code
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -544,6 +615,9 @@ export default function Sidebar({
           onRelocate={onRelocate}
           onClearHome={onClearHome}
           viewOnly={viewOnly}
+          showNations={showNations}
+          onShare={onShare}
+          onCopy={onCopy}
         />
       </Section>
 
