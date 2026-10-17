@@ -18,9 +18,13 @@ jobs:
     if: startsWith(github.event.issue.title, 'Map update:') && github.event.label.name == 'approved'
     runs-on: ubuntu-latest
     steps:
+      # PAT push (not GITHUB_TOKEN): pushes made by GITHUB_TOKEN never
+      # trigger other workflows, which would silently skip the Pages
+      # deploy. Needs ATLAS_PUSH_TOKEN (classic PAT, `public_repo`).
+      # Same pattern as map-imagery.yml.
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ATLAS_PUSH_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Extract and merge JSON from issue body
         id: merge
