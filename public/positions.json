@@ -100,5 +100,23 @@
     "href": "/wiki/Fortuna",
     "x": 9408,
     "y": 4759
+  },
+  "Volkia": {
+    "kind": "nation",
+    "href": "/wiki/Volkia",
+    "x": 7891,
+    "y": 6664
+  },
+  "North Dveria": {
+    "kind": "nation",
+    "href": "/wiki/North_Dveria",
+    "x": 8726,
+    "y": 6589
+  },
+  "Esteira": {
+    "kind": "nation",
+    "href": "/wiki/Esteira",
+    "x": 2118,
+    "y": 4013
   }
 }
